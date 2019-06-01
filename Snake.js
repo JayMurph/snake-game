@@ -1,6 +1,6 @@
 class Snake {
   constructor(position, dimensions, velocity, init_body_length, growth_rate) {
-    this.alive = 0;
+    this.alive = false;
     this.position = position;
     this.dimensions = dimensions;
     this.velocity = velocity;
@@ -18,17 +18,10 @@ class Snake {
   isAlive() {
     return this.alive;
   }
-  drawSegment(x_coord, y_coord, color, stroke_color, stroke_weight, spacing) {
-    push();
-    let spaced_x = x_coord * spacing;
-    let spaced_y = y_coord * spacing;
-    strokeWeight(stroke_weight);
-    stroke(stroke_color);
-    fill(color);
-    rect(spaced_x, spaced_y, this.dimensions.width, this.dimensions.height);
-    pop();
+  makeAlive() {
+    this.alive = true;
   }
-  drawSegmentNormal(x_coord, y_coord, size, color, stroke_color, stroke_weight) {
+  drawSegment(x_coord, y_coord, size, color, stroke_color, stroke_weight) {
     push();
     strokeWeight(stroke_weight);
     stroke(stroke_color);
@@ -36,97 +29,62 @@ class Snake {
     square(x_coord, y_coord, size);
     pop();
   }
-  showBody(color, stroke_color, stroke_weight, spacing) {
+  showBody(color, stroke_color, stroke_weight) {
     for (let i = 0; i < this.body.length; i++) {
       let x_coord = this.body[i].x;
       let y_coord = this.body[i].y;
       this.drawSegment(
         x_coord,
         y_coord,
+        this.dimensions.width,
         color,
         stroke_color,
-        stroke_weight,
-        spacing
+        stroke_weight
       );
     }
   }
-  showBodyNormal(size, normal, color, stroke_color, stroke_weight) {
-    for (let i = 0; i < this.body.length; i++) {
-      let x_coord = this.body[i].x;
-      let y_coord = this.body[i].y;
-      this.drawSegmentNormal(
-        x_coord * normal,
-        y_coord * normal,
-        size,
-        color,
-        stroke_color,
-        stroke_weight,
-      );
-    }
-  }
-  drawTongue(color, stroke_weight, spacing) {
+  drawTongue(x_coord, y_coord, color, stroke_weight, size, spacing) {
     push();
-    let center_x = (this.position.x * spacing) + spacing / 2;
-    let center_y = (this.position.y * spacing) + spacing / 2;
-    let start_x = center_x + ((spacing / 2) * this.velocity.x);
-    let start_y = center_y + ((spacing / 2) * this.velocity.y);
-    let end_x = center_x + (spacing * this.velocity.x);
-    let end_y = center_y + (spacing * this.velocity.y);
+    let mod_velx = this.velocity.x / spacing;
+    let mod_vely = this.velocity.y / spacing;
+    let center_x = x_coord + size / 2;
+    let center_y = y_coord + size / 2;
+    let start_x = center_x + (size / 2) * mod_velx;
+    let start_y = center_y + (size / 2) * mod_vely;
+    let end_x = center_x + size * mod_velx;
+    let end_y = center_y + size * mod_vely;
     strokeWeight(stroke_weight);
     stroke(color);
     line(start_x, start_y, end_x, end_y);
     pop();
   }
-  drawTongueNormal(x_coord, y_coord, color, stroke_weight, spacing) {
-    push();
-    let center_x = x_coord + (spacing / 2);
-    let center_y = y_coord + (spacing / 2);
-    let start_x = center_x + ((spacing / 2) * this.velocity.x);
-    let start_y = center_y + ((spacing / 2) * this.velocity.y);
-    let end_x = center_x + (spacing * this.velocity.x);
-    let end_y = center_y + (spacing * this.velocity.y);
-    strokeWeight(stroke_weight);
-    stroke(color);
-    line(start_x, start_y, end_x, end_y);
-    pop();
-  }
-  drawEyes(stroke_color, stroke_weight, spacing) {
-    let center_x = (this.position.x * spacing) + (spacing / 2);
-    let center_y = (this.position.y * spacing) + (spacing / 2);
-    let eye_1_x = (center_x + (5 * (this.velocity.y)));
-    let eye_1_y = (center_y + (5 * (-this.velocity.x)));
-    let eye_2_x = (center_x + (5 * (-this.velocity.y)));
-    let eye_2_y = (center_y + (5 * (this.velocity.x)));
-    push();
-    strokeWeight(stroke_weight);
-    stroke(stroke_color);
-    point(eye_1_x, eye_1_y);
-    point(eye_2_x, eye_2_y);
-    pop();
-  }
-  drawDeadEyesNormal(x_coord, y_coord, velx, vely, stroke_color, stroke_weight, spacing) {
-    let center_x = x_coord + (spacing / 2);
-    let center_y = y_coord + (spacing / 2);
-    let eye_1_x = (center_x + (5 * (vely)));
-    let eye_1_y = (center_y + (5 * (-velx)));
-    let eye_2_x = (center_x + (5 * (-vely)));
-    let eye_2_y = (center_y + (5 * (velx)));
+  drawDeadEyes(x_coord, y_coord, velx, vely, size, spacing) {
+    let mod_velx = velx / spacing;
+    let mod_vely = vely / spacing;
+    let center_x = x_coord + size / 2;
+    let center_y = y_coord + size / 2;
+    let eye_1_x = center_x + 5 * mod_vely;
+    let eye_1_y = center_y + 5 * -mod_velx;
+    let eye_2_x = center_x + 5 * -mod_vely;
+    let eye_2_y = center_y + 5 * mod_velx;
     push();
     strokeWeight(1);
     stroke(0);
-    line(eye_1_x +3, eye_1_y +3, eye_1_x -3, eye_1_y -3)
-    line(eye_1_x +3, eye_1_y -3, eye_1_x -3, eye_1_y +3)
-    line(eye_2_x +3, eye_2_y +3, eye_2_x -3, eye_2_y -3)
-    line(eye_2_x +3, eye_2_y -3, eye_2_x -3, eye_2_y +3)
+    line(eye_1_x + 3, eye_1_y + 3, eye_1_x - 3, eye_1_y - 3);
+    line(eye_1_x + 3, eye_1_y - 3, eye_1_x - 3, eye_1_y + 3);
+    line(eye_2_x + 3, eye_2_y + 3, eye_2_x - 3, eye_2_y - 3);
+    line(eye_2_x + 3, eye_2_y - 3, eye_2_x - 3, eye_2_y + 3);
     pop();
   }
-  drawEyesNormal(x_coord, y_coord, stroke_color, stroke_weight, spacing) {
-    let center_x = x_coord + (spacing / 2);
-    let center_y = y_coord + (spacing / 2);
-    let eye_1_x = (center_x + (5 * (this.velocity.y)));
-    let eye_1_y = (center_y + (5 * (-this.velocity.x)));
-    let eye_2_x = (center_x + (5 * (-this.velocity.y)));
-    let eye_2_y = (center_y + (5 * (this.velocity.x)));
+  drawEyes(x_coord, y_coord, stroke_color, stroke_weight, size, spacing) {
+    let mod_velx = this.velocity.x / spacing;
+    let mod_vely = this.velocity.y / spacing;
+    let center_x = x_coord + size / 2;
+    let center_y = y_coord + size / 2;
+    let eye_1_x = center_x + 5 * mod_vely;
+    let eye_1_y = center_y + 5 * -mod_velx;
+    let eye_2_x = center_x + 5 * -mod_vely;
+    let eye_2_y = center_y + 5 * mod_velx;
     push();
     strokeWeight(stroke_weight);
     stroke(stroke_color);
@@ -134,18 +92,16 @@ class Snake {
     point(eye_2_x, eye_2_y);
     pop();
   }
-  showHead(color, stroke_color, stroke_weight, spacing) {
+  drawHeadSegment(
+    x_coord,
+    y_coord,
+    size,
+    color,
+    stroke_color,
+    stroke_weight,
+    spacing
+  ) {
     this.drawSegment(
-      this.position.x,
-      this.position.y,
-      color,
-      stroke_color,
-      stroke_weight,
-      spacing
-    );
-  }
-  showHeadNormal(x_coord, y_coord, size, color, stroke_color, stroke_weight, spacing) {
-    this.drawSegmentNormal(
       x_coord,
       y_coord,
       size,
@@ -155,25 +111,98 @@ class Snake {
       spacing
     );
   }
-  show(color, tongue_color, stroke_color, stroke_weight, spacing) {
-    if (this.isAlive()) {
-      this.showHead(color, stroke_color, stroke_weight, spacing);
-      this.showBody(color, stroke_color, stroke_weight, spacing);
-      this.drawTongue(tongue_color, stroke_weight, spacing);
-      this.drawEyes(stroke_color, stroke_weight, spacing)
-    }
+  showHead(
+    x_coord,
+    y_coord,
+    color,
+    tongue_color,
+    stroke_color,
+    stroke_weight,
+    size,
+    spacing
+  ) {
+    this.drawHeadSegment(
+      x_coord,
+      y_coord,
+      size,
+      color,
+      stroke_color,
+      stroke_weight,
+      size
+    );
+    this.drawTongue(
+      x_coord,
+      y_coord,
+      tongue_color,
+      stroke_weight,
+      size,
+      spacing
+    );
+    this.drawEyes(x_coord, y_coord, stroke_color, stroke_weight, size, spacing);
   }
-  showNormal(x_coord, y_coord, color, tongue_color, stroke_color, stroke_weight, size, normal) {
-    this.showHeadNormal(x_coord, y_coord, size, color, stroke_color, stroke_weight, size);
-    this.showBodyNormal(size, normal, color, stroke_color, stroke_weight);
-    this.drawTongueNormal(x_coord, y_coord, tongue_color, stroke_weight, size);
-    this.drawEyesNormal(x_coord, y_coord, stroke_color, stroke_weight, size)
+  showHeadDead(
+    x_coord,
+    y_coord,
+    color,
+    tongue_color,
+    stroke_color,
+    stroke_weight,
+    size,
+    spacing
+  ) {
+    this.drawHeadSegment(
+      x_coord,
+      y_coord,
+      size,
+      color,
+      stroke_color,
+      stroke_weight,
+      spacing
+    );
+    this.drawTongue(
+      x_coord,
+      y_coord,
+      tongue_color,
+      stroke_weight,
+      size,
+      spacing
+    );
+    this.drawDeadEyes(
+      x_coord,
+      y_coord,
+      this.velocity.x,
+      this.velocity.y,
+      size,
+      spacing
+    );
   }
   introShow(color, tongue_color, stroke_color, stroke_weight, spacing) {
-    this.showHead(color, stroke_color, stroke_weight, spacing);
-    this.showBody(color, stroke_color, stroke_weight, spacing);
-    this.drawTongue(tongue_color, stroke_weight, spacing);
-    this.drawEyes(stroke_color, stroke_weight, spacing)
+    this.showBody(color, stroke_color, stroke_weight);
+    this.showHead(
+      this.position.x,
+      this.position.y,
+      color,
+      tongue_color,
+      stroke_color,
+      stroke_weight,
+      this.dimensions.width,
+      spacing
+    );
+  }
+  show(color, tongue_color, stroke_color, stroke_weight, spacing) {
+    if (this.isAlive()) {
+      this.showBody(color, stroke_color, stroke_weight);
+      this.showHead(
+        this.position.x,
+        this.position.y,
+        color,
+        tongue_color,
+        stroke_color,
+        stroke_weight,
+        this.dimensions.width,
+        spacing
+      );
+    }
   }
   isOppositeDirection(new_velocity) {
     let v_x1 = new_velocity.x;
@@ -189,8 +218,8 @@ class Snake {
   makeNewBody(body_length) {
     var new_body = [];
     for (let i = 1; i <= body_length; i++) {
-      let mod_x = i * (this.velocity.x);
-      let mod_y = i * (this.velocity.y);
+      let mod_x = i * this.velocity.x;
+      let mod_y = i * this.velocity.y;
       new_body.push({
         x: this.position.x - mod_x,
         y: this.position.y - mod_y
@@ -200,8 +229,8 @@ class Snake {
   }
   collisionBoundary(b_width, b_height, spacing) {
     var result = false;
-    let spaced_x = (this.position.x + this.velocity.x) * spacing;
-    let spaced_y = (this.position.y + this.velocity.y) * spacing;
+    let spaced_x = this.position.x + this.velocity.x;
+    let spaced_y = this.position.y + this.velocity.y;
     if (spaced_x >= b_width) {
       result = true;
     } else if (spaced_x < 0) {
@@ -238,7 +267,7 @@ class Snake {
       this.collisionBoundary(b_width, b_height, spacing) ||
       this.collisionSelf()
     ) {
-      this.alive = 0;
+      this.alive = false;
     } else {
       this.collisionFood(food_position);
     }
