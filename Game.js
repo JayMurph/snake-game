@@ -22,18 +22,42 @@ class GameState {
     this.snake;
     this.intro_snake;
     this.food;
+    this.mystery_box;
     this.current_score = 0;
-    this.intro_flag = true;
-    this.intro_grid_flag = false;
-    this.death_grid_flag = false;
-    this.new_game_flag = false;
-    this.game_flag = false;
+    this.state_flags;
+    this.mystery_flags;
+    this.mystery_timers;
   }
   incrementScore() {
     this.current_score++;
   }
   resetScore() {
     this.current_score = 0;
+  }
+  initFlags() {
+    this.state_flags = {
+      intro: false,
+      intro_grid: true,
+      death_grid: false,
+      new_game: false,
+      game: false,
+    };
+    this.mystery_flags = {
+      rotate: false,
+      invisible_snake: false 
+    }
+  }
+  resetMysteryFlags(){
+    this.mystery_flags = {
+      rotate: false,
+      invisible_snake: false
+    }
+  }
+  initMysteryTimers(){
+    this.mystery_timers = {
+      rotation : newRotationTimer(),
+      invisible_snake : newInvisibleSnakeTimer() 
+    };
   }
   newSnake() {
     return new Snake(
@@ -74,16 +98,31 @@ class GameState {
         this.game_height,
         this.spacing
       );
-      if (new_pos == this.snake.position) occupied = true;
-      else {
-        for (let i = 0; i < this.snake.body.length; i++) {
-          if (
-            new_pos.x == this.snake.body[i].x &&
-            new_pos.y == this.snake.body[i].y
-          )
-            occupied = true;
-        }
+      if (new_pos == this.snake.position) {
+        occupied = true;
       }
+      if (!(typeof this.mystery_box == "undefined")) {
+        if (this.mystery_box.isActive()) {
+          if (new_pos == this.mystery_box.position) {
+            occupied = true;
+          }
+        }
+      } 
+      if (!(typeof this.food == "undefined")) {
+        if (this.food.isAlive()) {
+          if (new_pos == this.food.pos) {
+            occupied = true;
+          }
+        }
+      } 
+      for (let i = 0; i < this.snake.body.length; i++) {
+        if (
+          new_pos.x == this.snake.body[i].x &&
+          new_pos.y == this.snake.body[i].y
+        )
+          occupied = true;
+      }
+      
     } while (occupied);
     return new_pos;
   }
@@ -91,35 +130,82 @@ class GameState {
     var new_pos = this.generateUnnocupiedPosition();
     return new Food(new_pos, { width: _INIT_WIDTH, height: _INIT_HEIGHT });
   }
+  randomMystery(){
+    let min = 1;
+    let max = 3;
+    let rand = Math.floor(Math.random() * (max - min)) + min; 
+    switch(rand){
+        case 1:
+            return "rotate";
+        case 2:
+            return "invisible_snake";
+    }
+  }
+  newMysteryBox() {
+    var new_pos = this.generateUnnocupiedPosition();
+    return new MysteryBox(
+      new_pos,
+      {
+        width: _INIT_WIDTH,
+        height: _INIT_HEIGHT
+      },
+      this.randomMystery()
+    );
+  }
   initSnakeAndFood() {
     this.snake = this.newSnake();
     this.food = this.newFood();
+    this.mystery_box = this.newMysteryBox();
   }
   updateGame() {
     let s = this.snake;
     let f = this.food;
+    let m = this.mystery_box;
     if (!floor(frameCount % this.speed)) {
       if (!s.isAlive()) {
-        this.game_flag = false;
-        this.death_grid_flag = true;
+        this.state_flags.game = false;
+        this.state_flags.death_grid = true;
       } else if (!f.isAlive()) {
         this.food = this.newFood();
         this.food.makeAlive();
         this.incrementScore();
+      } else if (m.isCollected()) {
+        //console.log(m.mystery);
+        this.mystery_flags[m.mystery] = true;
+        m.collected = false;
+      } else if (!m.isActive()){
+        this.mystery_box = this.newMysteryBox();
       }
       if (!(typeof s == "undefined")) {
-        s.update(this.game_width, this.game_height, this.spacing, f.position);
+        s.update(
+          this.game_width,
+          this.game_height,
+          this.spacing,
+          f.position,
+          !this.mystery_flags.invisible_snake,
+          this.mystery_timers.invisible_snake.getTime()
+        );
         f.update(s.position);
+        m.update(s.position);
+      }
+      if (m.isWaiting()) {
+        mystery_box_timer.timer();
+      }
+      if(this.mystery_flags.invisible_snake){
+        this.mystery_timers.invisible_snake.timer();
       }
     }
   }
   newGame() {
-    if (this.new_game_flag) {
+    if (this.state_flags.new_game) {
       this.snake = this.newSnake();
       this.food = this.newFood();
+      this.mystery_box = this.newMysteryBox();
       this.resetScore();
-      this.new_game_flag = false;
-      this.intro_grid_flag = true;
+      this.state_flags.new_game = false;
+      this.resetMysteryFlags();
+      this.initMysteryTimers();
+      this.state_flags.intro_grid = true;
     }
   }
   drawGrid() {
@@ -131,8 +217,8 @@ class GameState {
     noFill();
     stroke(scheme.getGC());
     strokeWeight(3);
-    for (let i = 0; i < sw / sp; i++) {
-      for (let j = 0; j < sh / sp; j++) {
+    for (let i = -(sw / 2) / sp; i < sw / sp / 2; i++) {
+      for (let j = -(sh / 2) / sp; j < sh / sp / 2; j++) {
         square(i * sp, j * sp, sp);
       }
     }
@@ -149,11 +235,19 @@ class GameState {
     pop();
   }
   translateGame() {
-    translate(this.game_position.x, this.game_position.y);
+    translate(
+      this.game_width / 2 + this.game_position.x,
+      this.game_height / 2 + this.game_position.y
+    );
+    if (this.mystery_flags.rotate) {
+      this.mystery_timers.rotation.timer();
+      rotate(this.mystery_timers.rotation.getTime());
+    }
   }
   showGame() {
     let s = this.snake;
     let f = this.food;
+    let m = this.mystery_box;
     let scheme = this.current_color_scheme;
     push();
     this.translateGame();
@@ -161,11 +255,13 @@ class GameState {
     f.show(scheme.getFC(), scheme.getFSC(), scheme.getSW(), this.spacing);
     s.show(
       scheme.getSC(),
+      scheme.getSIC(),
       scheme.getSTC(),
       scheme.getSSC(),
       scheme.getSW(),
       this.spacing
     );
+    m.show(scheme.getMBC(), scheme.getMBSC(), scheme.getSW(), this.spacing);
     pop();
   }
   showBackground() {
@@ -177,37 +273,51 @@ class GameState {
     this.showGame();
   }
   game() {
-    if (this.intro_flag) {
+    if (this.state_flags.intro) {
       if (typeof this.intro_snake == "undefined") {
         this.intro_snake = this.initIntroSnake();
         this.intro_snake.makeAlive();
       }
-      this.intro_flag = introAnimation(this);
-      if (this.intro_flag == false) {
+      this.state_flags.intro = introAnimation(this);
+      if (this.state_flags.intro == false) {
         this.intro_snake = undefined;
-        this.intro_grid_flag = true;
+        this.state_flags.intro_grid = true;
       }
-    } else if (this.intro_grid_flag) {
-      this.intro_grid_flag = introGridAnimation(this);
-      if (!this.intro_grid_flag) {
-        this.game_flag = true;
+    } else if (this.state_flags.intro_grid) {
+      this.state_flags.intro_grid = introGridAnimation(this);
+      if (!this.state_flags.intro_grid) {
+        this.state_flags.game = true;
         this.food.makeAlive();
         this.snake.makeAlive();
       }
-    } else if (this.death_grid_flag) {
-      this.death_grid_flag = deathGridAnimation(this);
-      if (!this.death_grid_flag) {
-        this.new_game_flag = true;
+    } else if (this.state_flags.death_grid) {
+      this.state_flags.death_grid = deathGridAnimation(this);
+      if (!this.state_flags.death_grid) {
+        this.state_flags.new_game = true;
       }
-    } else if (this.new_game_flag) {
+    } else if (this.state_flags.new_game) {
       this.newGame();
-    } else if (this.game_flag) {
+    } else if (this.state_flags.game) {
       this.updateGame();
       if (!(typeof this.snake == "undefined")) {
         this.showAll();
       }
     }
   }
+}
+
+function generateRandomPosition(x_max, y_max, spacing) {
+  let up_lim_x = x_max / 2 / spacing;
+  let bot_lim_x = -(x_max / 2) / spacing;
+  let up_lim_y = y_max / 2 / spacing;
+  let bot_lim_y = -(y_max / 2) / spacing;
+  let x = floor(random(bot_lim_x, up_lim_x));
+  let y = floor(random(bot_lim_y, up_lim_y));
+  var pos = {
+    x: x * spacing,
+    y: y * spacing
+  };
+  return pos;
 }
 
 const _SKETCH_WIDTH = 800;
@@ -218,21 +328,11 @@ const _GAME_POSITION = { x: 100, y: 100 };
 const _SPACING = 20;
 const _SPEED = 5;
 const _SPEED_INCREASE = 0.5;
-const _INIT_SNAKE_POSITION_X = (_GAME_WIDTH / 2); 
-const _INIT_SNAKE_POSITION_Y = (_GAME_HEIGHT / 2); 
+const _INIT_SNAKE_POSITION_X = 0;
+const _INIT_SNAKE_POSITION_Y = 0;
 const _INIT_SNAKE_VELOCITY_X = _SPACING;
 const _INIT_SNAKE_VELOCITY_Y = 0;
 const _INIT_BODY_LENGTH = 6;
 const _GROWTH_RATE = 3;
 const _INIT_WIDTH = _SPACING;
 const _INIT_HEIGHT = _SPACING;
-
-function generateRandomPosition(x_max, y_max,spacing) {
-  let x = floor(random(0, x_max / spacing));
-  let y = floor(random(0, y_max / spacing));
-  var pos = {
-    x: x * spacing,
-    y: y * spacing 
-  };
-  return pos;
-}

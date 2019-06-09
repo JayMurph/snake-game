@@ -14,6 +14,8 @@ class Snake {
     this.grow_flag = 0;
     this.growth_rate = growth_rate;
     this.current_growth = 0;
+    this.visible_body = true;
+    this.invisibility_timer = 0;
   }
   isAlive() {
     return this.alive;
@@ -38,6 +40,31 @@ class Snake {
         y_coord,
         this.dimensions.width,
         color,
+        stroke_color,
+        stroke_weight
+      );
+    }
+  }
+  showInvisibleBody(color, invisible_color, stroke_color, stroke_weight) {
+    for (let i = 0; i < this.body.length; i++) {
+      let x_coord = this.body[i].x;
+      let y_coord = this.body[i].y;
+      let timer = this.invisibility_timer;
+      var temp_color;
+      if(timer < 120){
+        temp_color = invisible_color;
+      }else{
+        if(sin(pow(timer - 110, 2)) > 0){
+          temp_color = color;
+        }else{
+          temp_color = invisible_color;
+        }
+      }
+      this.drawSegment(
+        x_coord,
+        y_coord,
+        this.dimensions.width,
+        temp_color,
         stroke_color,
         stroke_weight
       );
@@ -189,9 +216,13 @@ class Snake {
       spacing
     );
   }
-  show(color, tongue_color, stroke_color, stroke_weight, spacing) {
+  show(color, invisible_color, tongue_color, stroke_color, stroke_weight, spacing) {
     if (this.isAlive()) {
-      this.showBody(color, stroke_color, stroke_weight);
+      if(this.visible_body){
+        this.showBody(color, stroke_color, stroke_weight);
+      }else{
+        this.showInvisibleBody(color, invisible_color, stroke_color, stroke_weight);
+      }
       this.showHead(
         this.position.x,
         this.position.y,
@@ -231,13 +262,13 @@ class Snake {
     var result = false;
     let spaced_x = this.position.x + this.velocity.x;
     let spaced_y = this.position.y + this.velocity.y;
-    if (spaced_x >= b_width) {
+    if (spaced_x >= b_width / 2) {
       result = true;
-    } else if (spaced_x < 0) {
+    } else if (spaced_x < -(b_width / 2)) {
       result = true;
-    } else if (spaced_y >= b_height) {
+    } else if (spaced_y >= b_height / 2) {
       result = true;
-    } else if (spaced_y < 0) {
+    } else if (spaced_y < -(b_height / 2)) {
       result = true;
     }
     return result;
@@ -263,10 +294,9 @@ class Snake {
     }
   }
   checkCollisions(b_width, b_height, spacing, food_position) {
-    if (
-      this.collisionBoundary(b_width, b_height, spacing) ||
-      this.collisionSelf()
-    ) {
+    if (this.collisionBoundary(b_width, b_height, spacing)) {
+      this.alive = false;
+    } else if (this.collisionSelf() && this.visible_body) {
       this.alive = false;
     } else {
       this.collisionFood(food_position);
@@ -315,8 +345,10 @@ class Snake {
       }
     }
   }
-  update(b_width, b_height, spacing, food_position) {
+  update(b_width, b_height, spacing, food_position, visible_body, invisibility_timer) {
     if (this.isAlive()) {
+      this.visible_body = visible_body;
+      this.invisibility_timer = invisibility_timer;
       let new_x = this.position.x;
       let new_y = this.position.y;
       this.updateVelocity();

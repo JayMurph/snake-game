@@ -15,9 +15,12 @@ function setup() {
     color_schemes_arr[0]
   );
   game_state.initSnakeAndFood();
+  game_state.initFlags();
+  game_state.initMysteryTimers();
   var canvas = createCanvas(_SKETCH_WIDTH, _SKETCH_HEIGHT);
   canvas.parent("sketch_holder");
   frameRate(60);
+  angleMode(DEGREES);
 }
 
 function draw() {

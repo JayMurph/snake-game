@@ -5,13 +5,13 @@ function deathGridAnimation(GS) {
   let scheme = GS.current_color_scheme;
   let snake = GS.snake;
   let food = GS.food;
-  let mod_gw = gw / sp;
-  let mod_gh = gh / sp;
   if (typeof this.running == "undefined") {
-    this.limit_x = gw / sp - 1;
-    this.limit_y = gh / sp - 1;
-    this.x_counter = this.limit_x;
-    this.y_counter = this.limit_y;
+    this.max_x = ((gw / 2) / sp);
+    this.max_y = ((gh / 2) / sp);
+    this.min_x = -this.max_x;
+    this.min_y = -this.max_y;
+    this.x_counter = this.max_x;
+    this.y_counter = this.max_y * 4;
     this.running = 1;
   }
   push();
@@ -23,13 +23,13 @@ function deathGridAnimation(GS) {
   var draw_snake_head;
   var draw_snake_body = new Array();
   var draw_food;
-  for (let i = this.y_counter; i >= 0; i--) {
-    for (let j = 0, k = i; k >= 0; ) {
+  for (let i = this.y_counter; i >= this.min_y; i--) {
+    for (let j = this.min_x, k = i; k >= this.min_y; ) {
       let curr_x = j * sp;
       let curr_y = k * sp;
-      if (j < mod_gw && k < mod_gh) {
+      if (curr_x < gw / 2 && curr_y < gh / 2) {
         var size;
-        size = map(this.y_counter - i, 0, this.limit_y, 0, sp);
+        size = map(this.y_counter - i, this.min_y, this.max_y, 0, sp) - 10;
         if (size >= sp) {
           size = sp;
         } else if (size < 1) {
@@ -108,8 +108,9 @@ function deathGridAnimation(GS) {
       sp
       );
   }
-  if (this.y_counter <= 0) {
+  if (this.y_counter <= this.min_y) {
     pop();
+    this.running = undefined;
     return false;
   } else {
     this.y_counter -= 1;
@@ -125,31 +126,33 @@ function introGridAnimation(GS) {
   let scheme = GS.current_color_scheme;
   let snake = GS.snake;
   let food = GS.food;
-  let mod_gw = gw / sp;
-  let mod_gh = gh / sp;
+  let mod_gw = (gw / 2) / sp;
+  let mod_gh = (gh / 2) / sp;
   if (typeof this.running == "undefined") {
-    this.limit_x = gw / sp - 1;
-    this.limit_y = gh / sp - 1;
-    this.x_counter = 0;
-    this.y_counter = 0;
+    this.max_x = ((gw / 2) / sp);
+    this.max_y = ((gh / 2) / sp);
+    this.min_x = -this.max_x;
+    this.min_y = -this.max_y;
+    this.x_counter = this.min_x;
+    this.y_counter = this.min_y;
     this.running = 1;
   }
-  var draw_snake_head;
-  var draw_snake_body = new Array();
-  var draw_food;
   push();
   GS.translateGame();
   GS.showBackground();
   noFill();
   stroke(scheme.getGC());
   strokeWeight(3);
-  for (let i = this.y_counter; i >= 0; i--) {
-    for (let j = 0, k = i; k >= 0; ) {
+  var draw_snake_head;
+  var draw_snake_body = new Array();
+  var draw_food;
+  for (let i = this.y_counter; i >= this.min_y; i--) {
+    for (let j = this.min_x, k = i; k >= this.min_y; ) {
       let curr_x = j * sp;
       let curr_y = k * sp;
-      if (curr_x < gw && curr_y < gh) {
+      if (curr_x < gw / 2 && curr_y < gh / 2) {
         var size;
-        size = map(this.y_counter - i, 0, this.limit_y, 0, sp);
+        size = map(this.y_counter - i, this.min_y, this.max_y, 0, sp) - 10;
         if (size >= sp) {
           size = sp;
         } else if (size < 1) {
@@ -226,8 +229,9 @@ function introGridAnimation(GS) {
       draw_food.size
     );
   }
-  if (this.y_counter >= Math.sqrt(mod_gw * mod_gw + mod_gh * mod_gh) * 2) {
+  if (this.y_counter >= Math.sqrt(mod_gw * mod_gw + mod_gh * mod_gh) * 3) {
     pop();
+    this.running = undefined;
     return false;
   } else {
     this.y_counter += 1;
