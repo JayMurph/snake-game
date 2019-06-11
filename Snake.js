@@ -16,6 +16,7 @@ class Snake {
     this.current_growth = 0;
     this.visible_body = true;
     this.invisibility_timer = 0;
+    this.color = color(100, 100, 20 );
   }
   isAlive() {
     return this.alive;
@@ -54,7 +55,7 @@ class Snake {
       if(timer < 120){
         temp_color = invisible_color;
       }else{
-        if(sin(pow(timer - 110, 2)) > 0){
+        if(sin(pow(timer - 100, 2)) > 0){
           temp_color = color;
         }else{
           temp_color = invisible_color;

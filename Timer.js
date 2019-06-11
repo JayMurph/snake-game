@@ -20,29 +20,37 @@ function newRotationTimer() {
   return new Timer(function() {
     if (this.getTime() >= 360) {
       this.resetTime();
-      game_state.mystery_flags.rotate = false;
+      game_state.mystery_flags["rotate_right"] = false;
+      game_state.mystery_flags["rotate_left"] = false;
       game_state.mystery_box.makeInactive();
     }
   }, 0.5);
+}
+
+function newGridShrinkTimer() {
+  return new Timer(function() {
+    if(this.getTime() == 0){
+      let temp = floor(random(1, 6)) * 2;
+      game_state.grid_width = game_state.game_width - (temp * game_state.spacing);
+      game_state.grid_height = game_state.game_height - (temp * game_state.spacing); 
+    }else if(this.getTime() >= 180){
+      this.resetTime();
+      game_state.mystery_flags["grid_shrink"] = false;
+      game_state.grid_width = game_state.game_width;
+      game_state.grid_height = game_state.game_height; 
+      game_state.mystery_box.makeInactive();
+    }
+  }, 1)
 }
 
 function newInvisibleSnakeTimer() {
   return new Timer(function() {
     if (this.getTime() >= 3 * 60) {
       this.resetTime();
-      game_state.mystery_flags.invisible_snake = false;
+      game_state.mystery_flags["invisible_snake"] = false;
       game_state.mystery_box.makeInactive();
     }
   }, 1);
 }
 
-var mystery_box_timer = new Timer(function() {
-  if (this.getTime() <= 1) {
-    this.rand_count = random(0, 120);
-  }
-  if (this.getTime() >= this.rand_count) {
-    game_state.mystery_box.makeVisible();
-    game_state.mystery_box.makeNotWaiting();
-    this.resetTime();
-  }
-}, 1);
+var mystery_box_timer = new Timer(function() {}, 1);

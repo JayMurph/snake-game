@@ -3,6 +3,8 @@ class MysteryBox {
     this.position = position;
     this.dimensions = dimensions;
     this.mystery = mystery;
+    this.timer = new Timer(function(){}, 1);
+    this.spawn_time = random(60, 180);
     this.active = true;
     this.waiting = true;
     this.collected = false;
@@ -54,7 +56,7 @@ class MysteryBox {
         spacing
       );
       push();
-      textSize(20);
+      textSize(spacing);
       fill(0);
       textAlign(CENTER, CENTER);
       text(
@@ -77,6 +79,14 @@ class MysteryBox {
   update(snake_position) {
     if (this.isVisible()) {
       this.snakeCollision(snake_position);
+    }
+    if(this.isWaiting()){
+      this.timer.timer();
+    }
+    if(this.timer.getTime() >= this.spawn_time){
+      this.makeVisible();
+      this.makeNotWaiting();
+      this.timer.resetTime();
     }
   }
 }

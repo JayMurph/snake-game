@@ -1,5 +1,5 @@
 class ColorScheme {
-  constructor(bg, s, st, si, ss, f, fs, mbc, mbsc, g, t, sw) {
+  constructor(bg, s, st, si, ss, f, fs, mbc, mbsc, g, gb, t, sw) {
     this.background_color = bg;
     this.snake_color = s;
     this.snake_tongue_color = st;
@@ -10,6 +10,7 @@ class ColorScheme {
     this.mystery_box_color = mbc;
     this.mystery_box_stroke_color = mbsc;
     this.grid_color = g;
+    this.grid_bounds_color = gb;
     this.text_color = t;
     this.stroke_weight = sw;
   }
@@ -43,6 +44,9 @@ class ColorScheme {
   getGC() {
     return this.grid_color;
   }
+  getGBC(){
+    return this.grid_bounds_color;
+  }
   getTC() {
     return this.text_color;
   }
@@ -63,6 +67,7 @@ function setupColorSchemes(arr) {
     color(255, 255, 0),               //mystery box
     color(204, 204, 0),               //mystery box stroke
     color(100),                       //grid
+    color(100, 50),                  //grid bounds
     color(255),                       //text
     4                                 //stroke weight
   );

@@ -14,6 +14,8 @@ class GameState {
     this.sketch_height = sketch_height;
     this.game_width = game_width;
     this.game_height = game_height;
+    this.grid_width = this.game_width;
+    this.grid_height = this.game_height;
     this.game_position = game_position;
     this.speed = speed;
     this.speed_increase = speed_increase;
@@ -24,40 +26,50 @@ class GameState {
     this.food;
     this.mystery_box;
     this.current_score = 0;
-    this.state_flags;
-    this.mystery_flags;
+    this.state_flags = [];
+    this.mystery_flags = [];
     this.mystery_timers;
   }
   incrementScore() {
-    this.current_score++;
+    let mflags = this.mystery_flags;
+    if (mflags["rotate_right"] || mflags["rotate_left"]) {
+      this.current_score += 3;
+    } else if (mflags["grid_shrink"]) {
+      this.current_score += 2;
+    } else {
+      this.current_score++;
+    }
   }
   resetScore() {
     this.current_score = 0;
   }
+  resetStateFlags() {
+    this.state_flags["intro"] = false;
+    this.state_flags["intro_grid"] = true;
+    this.state_flags["death_grid"] = false;
+    this.state_flags["new_game"] = false;
+    this.state_flags["game"] = false;
+  }
+  resetMysteryFlags() {
+    this.mystery_flags["rotate_right"] = false;
+    this.mystery_flags["rotate_left"] = false;
+    this.mystery_flags["invisible_snake"] = false;
+    this.mystery_flags["grid_shrink"] = false;
+  }
   initFlags() {
-    this.state_flags = {
-      intro: false,
-      intro_grid: true,
-      death_grid: false,
-      new_game: false,
-      game: false,
-    };
-    this.mystery_flags = {
-      rotate: false,
-      invisible_snake: false 
-    }
+    this.resetStateFlags();
+    this.resetMysteryFlags();
   }
-  resetMysteryFlags(){
-    this.mystery_flags = {
-      rotate: false,
-      invisible_snake: false
-    }
-  }
-  initMysteryTimers(){
+  initMysteryTimers() {
     this.mystery_timers = {
-      rotation : newRotationTimer(),
-      invisible_snake : newInvisibleSnakeTimer() 
+      rotation: newRotationTimer(),
+      invisible_snake: newInvisibleSnakeTimer(),
+      grid_shrink: newGridShrinkTimer()
     };
+  }
+  resetGrid() {
+    this.grid_width = this.game_width;
+    this.grid_height = this.game_height;
   }
   newSnake() {
     return new Snake(
@@ -88,14 +100,14 @@ class GameState {
       0
     );
   }
-  generateUnnocupiedPosition() {
+  generateUnnocupiedPosition(x_reduction, y_reduction) {
     var new_pos;
     var occupied;
     do {
       occupied = false;
       new_pos = generateRandomPosition(
-        this.game_width,
-        this.game_height,
+        this.grid_width - x_reduction,
+        this.grid_height - y_reduction,
         this.spacing
       );
       if (new_pos == this.snake.position) {
@@ -107,14 +119,14 @@ class GameState {
             occupied = true;
           }
         }
-      } 
+      }
       if (!(typeof this.food == "undefined")) {
         if (this.food.isAlive()) {
           if (new_pos == this.food.pos) {
             occupied = true;
           }
         }
-      } 
+      }
       for (let i = 0; i < this.snake.body.length; i++) {
         if (
           new_pos.x == this.snake.body[i].x &&
@@ -122,34 +134,44 @@ class GameState {
         )
           occupied = true;
       }
-      
     } while (occupied);
     return new_pos;
   }
   newFood() {
-    var new_pos = this.generateUnnocupiedPosition();
+    var new_pos = this.generateUnnocupiedPosition(0, 0);
     return new Food(new_pos, { width: _INIT_WIDTH, height: _INIT_HEIGHT });
   }
-  randomMystery(){
+  generateRandomMystery() {
     let min = 1;
-    let max = 3;
-    let rand = Math.floor(Math.random() * (max - min)) + min; 
-    switch(rand){
-        case 1:
-            return "rotate";
-        case 2:
-            return "invisible_snake";
+    let max = 5;
+    let rand = Math.floor(Math.random() * (max - min)) + min;
+    console.log(rand);
+    switch (rand) {
+      case 1:
+        return "rotate_right";
+      case 2:
+        return "rotate_left";
+      case 3:
+        return "invisible_snake";
+      case 4:
+        return "grid_shrink";
     }
   }
   newMysteryBox() {
-    var new_pos = this.generateUnnocupiedPosition();
+    var random_mystery = this.generateRandomMystery();
+    var new_pos;
+    if (random_mystery == "grid_shrink") {
+      new_pos = this.generateUnnocupiedPosition(160, 160);
+    } else {
+      new_pos = this.generateUnnocupiedPosition(0, 0);
+    }
     return new MysteryBox(
       new_pos,
       {
         width: _INIT_WIDTH,
         height: _INIT_HEIGHT
       },
-      this.randomMystery()
+      random_mystery
     );
   }
   initSnakeAndFood() {
@@ -163,63 +185,87 @@ class GameState {
     let m = this.mystery_box;
     if (!floor(frameCount % this.speed)) {
       if (!s.isAlive()) {
-        this.state_flags.game = false;
-        this.state_flags.death_grid = true;
+        this.state_flags["game"] = false;
+        this.state_flags["death_grid"] = true;
       } else if (!f.isAlive()) {
         this.food = this.newFood();
         this.food.makeAlive();
         this.incrementScore();
       } else if (m.isCollected()) {
-        //console.log(m.mystery);
         this.mystery_flags[m.mystery] = true;
         m.collected = false;
-      } else if (!m.isActive()){
+      } else if (!m.isActive()) {
         this.mystery_box = this.newMysteryBox();
       }
       if (!(typeof s == "undefined")) {
         s.update(
-          this.game_width,
-          this.game_height,
+          this.grid_width,
+          this.grid_height,
           this.spacing,
           f.position,
-          !this.mystery_flags.invisible_snake,
-          this.mystery_timers.invisible_snake.getTime()
+          !this.mystery_flags["invisible_snake"],
+          this.mystery_timers["invisible_snake"].getTime()
         );
         f.update(s.position);
         m.update(s.position);
       }
-      if (m.isWaiting()) {
-        mystery_box_timer.timer();
-      }
-      if(this.mystery_flags.invisible_snake){
+      if (this.mystery_flags["invisible_snake"]) {
         this.mystery_timers.invisible_snake.timer();
+      }
+      if (this.mystery_flags["grid_shrink"]) {
+        this.mystery_timers.grid_shrink.timer();
       }
     }
   }
   newGame() {
-    if (this.state_flags.new_game) {
+    if (this.state_flags["new_game"]) {
       this.snake = this.newSnake();
       this.food = this.newFood();
       this.mystery_box = this.newMysteryBox();
       this.resetScore();
-      this.state_flags.new_game = false;
+      this.state_flags["new_game"] = false;
       this.resetMysteryFlags();
       this.initMysteryTimers();
-      this.state_flags.intro_grid = true;
+      this.state_flags["intro_grid"] = true;
+      this.resetGrid();
     }
   }
   drawGrid() {
     let sp = this.spacing;
-    let sw = this.game_width;
-    let sh = this.game_height;
+    let gw = this.game_width;
+    let gh = this.game_height;
+    let gridw = this.grid_width;
+    let gridh = this.grid_height;
     let scheme = this.current_color_scheme;
+    var x_min, x_max, y_min, y_max;
+    if (this.mystery_flags["grid_shrink"]) {
+      x_min = -(gridw / 2);
+      x_max = gridw / 2;
+      y_min = -(gridh / 2);
+      y_max = gridh / 2;
+    }
     push();
     noFill();
-    stroke(scheme.getGC());
     strokeWeight(3);
-    for (let i = -(sw / 2) / sp; i < sw / sp / 2; i++) {
-      for (let j = -(sh / 2) / sp; j < sh / sp / 2; j++) {
-        square(i * sp, j * sp, sp);
+    for (let i = -(gw / 2) / sp; i < gw / sp / 2; i++) {
+      for (let j = -(gh / 2) / sp; j < gh / sp / 2; j++) {
+        let x = i * sp;
+        let y = j * sp;
+        let time = this.mystery_timers.grid_shrink.getTime();
+        if (x >= x_max || x < x_min || y >= y_max || y < y_min) {
+          if (time > 120) {
+            if (sin(pow(time - 100, 2)) > 0) {
+              stroke(scheme.getGC());
+            } else {
+              stroke(scheme.getGBC());
+            }
+          } else {
+            stroke(scheme.getGBC());
+          }
+        } else {
+          stroke(scheme.getGC());
+        }
+        square(x, y, sp);
       }
     }
     pop();
@@ -235,13 +281,14 @@ class GameState {
     pop();
   }
   translateGame() {
-    translate(
-      this.game_width / 2 + this.game_position.x,
-      this.game_height / 2 + this.game_position.y
-    );
-    if (this.mystery_flags.rotate) {
+    translate(this.sketch_width / 2, this.sketch_height / 2 + 20);
+    if (this.mystery_flags["rotate_right"]) {
       this.mystery_timers.rotation.timer();
       rotate(this.mystery_timers.rotation.getTime());
+    }
+    if (this.mystery_flags["rotate_left"]) {
+      this.mystery_timers.rotation.timer();
+      rotate(-this.mystery_timers.rotation.getTime());
     }
   }
   showGame() {
@@ -273,31 +320,31 @@ class GameState {
     this.showGame();
   }
   game() {
-    if (this.state_flags.intro) {
+    if (this.state_flags["intro"]) {
       if (typeof this.intro_snake == "undefined") {
         this.intro_snake = this.initIntroSnake();
         this.intro_snake.makeAlive();
       }
-      this.state_flags.intro = introAnimation(this);
-      if (this.state_flags.intro == false) {
+      this.state_flags["intro"] = introAnimation(this);
+      if (this.state_flags["intro"] == false) {
         this.intro_snake = undefined;
-        this.state_flags.intro_grid = true;
+        this.state_flags["intro_grid"] = true;
       }
-    } else if (this.state_flags.intro_grid) {
-      this.state_flags.intro_grid = introGridAnimation(this);
-      if (!this.state_flags.intro_grid) {
-        this.state_flags.game = true;
+    } else if (this.state_flags["intro_grid"]) {
+      this.state_flags["intro_grid"] = introGridAnimation(this);
+      if (!this.state_flags["intro_grid"]) {
+        this.state_flags["game"] = true;
         this.food.makeAlive();
         this.snake.makeAlive();
       }
-    } else if (this.state_flags.death_grid) {
-      this.state_flags.death_grid = deathGridAnimation(this);
-      if (!this.state_flags.death_grid) {
-        this.state_flags.new_game = true;
+    } else if (this.state_flags["death_grid"]) {
+      this.state_flags["death_grid"] = deathGridAnimation(this);
+      if (!this.state_flags["death_grid"]) {
+        this.state_flags["new_game"] = true;
       }
-    } else if (this.state_flags.new_game) {
+    } else if (this.state_flags["new_game"]) {
       this.newGame();
-    } else if (this.state_flags.game) {
+    } else if (this.state_flags["game"]) {
       this.updateGame();
       if (!(typeof this.snake == "undefined")) {
         this.showAll();
