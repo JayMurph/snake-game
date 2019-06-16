@@ -24,6 +24,10 @@ class Snake {
   makeAlive() {
     this.alive = true;
   }
+  changeDimensions(width, height){
+    this.dimensions.width = width;
+    this.dimensions.height = height;
+  }
   drawSegment(x_coord, y_coord, size, color, stroke_color, stroke_weight) {
     push();
     strokeWeight(stroke_weight);

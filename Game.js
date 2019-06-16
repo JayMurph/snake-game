@@ -34,7 +34,7 @@ class GameState {
     let mflags = this.mystery_flags;
     if (mflags["rotate_right"] || mflags["rotate_left"]) {
       this.current_score += 3;
-    } else if (mflags["grid_shrink"]) {
+    } else if (mflags["grid_restrict"] || mflags["grid_fluctuate"]) {
       this.current_score += 2;
     } else {
       this.current_score++;
@@ -54,7 +54,8 @@ class GameState {
     this.mystery_flags["rotate_right"] = false;
     this.mystery_flags["rotate_left"] = false;
     this.mystery_flags["invisible_snake"] = false;
-    this.mystery_flags["grid_shrink"] = false;
+    this.mystery_flags["grid_restrict"] = false;
+    this.mystery_flags["grid_fluctuate"] = false;
   }
   initFlags() {
     this.resetStateFlags();
@@ -64,8 +65,22 @@ class GameState {
     this.mystery_timers = {
       rotation: newRotationTimer(),
       invisible_snake: newInvisibleSnakeTimer(),
-      grid_shrink: newGridShrinkTimer()
+      grid_restrict: newGridRestrictTimer(),
+      grid_fluctuate: newGridFluctuateTimer()
     };
+  }
+  updateActiveTimers() {
+    if (!floor(frameCount % this.speed)) {
+      if (this.mystery_flags["invisible_snake"]) {
+        this.mystery_timers.invisible_snake.timer();
+      }
+      if (this.mystery_flags["grid_restrict"]) {
+        this.mystery_timers.grid_restrict.timer();
+      }
+      if (this.mystery_flags["grid_fluctuate"]) {
+        this.mystery_timers.grid_fluctuate.timer();
+      }
+    }
   }
   resetGrid() {
     this.grid_width = this.game_width;
@@ -143,24 +158,30 @@ class GameState {
   }
   generateRandomMystery() {
     let min = 1;
-    let max = 5;
+    let max = 6;
     let rand = Math.floor(Math.random() * (max - min)) + min;
-    console.log(rand);
     switch (rand) {
       case 1:
+        console.log("rotate_right");
         return "rotate_right";
       case 2:
+        console.log("rotate_left");
         return "rotate_left";
       case 3:
+        console.log("invisible_snake");
         return "invisible_snake";
       case 4:
-        return "grid_shrink";
+        console.log("grid_restrict");
+        return "grid_restrict";
+      case 5:
+        console.log("grid_fluctuate");
+        return "grid_fluctuate";
     }
   }
   newMysteryBox() {
     var random_mystery = this.generateRandomMystery();
     var new_pos;
-    if (random_mystery == "grid_shrink") {
+    if (random_mystery == "grid_restrict") {
       new_pos = this.generateUnnocupiedPosition(160, 160);
     } else {
       new_pos = this.generateUnnocupiedPosition(0, 0);
@@ -209,12 +230,6 @@ class GameState {
         f.update(s.position);
         m.update(s.position);
       }
-      if (this.mystery_flags["invisible_snake"]) {
-        this.mystery_timers.invisible_snake.timer();
-      }
-      if (this.mystery_flags["grid_shrink"]) {
-        this.mystery_timers.grid_shrink.timer();
-      }
     }
   }
   newGame() {
@@ -238,7 +253,7 @@ class GameState {
     let gridh = this.grid_height;
     let scheme = this.current_color_scheme;
     var x_min, x_max, y_min, y_max;
-    if (this.mystery_flags["grid_shrink"]) {
+    if (this.mystery_flags["grid_restrict"]) {
       x_min = -(gridw / 2);
       x_max = gridw / 2;
       y_min = -(gridh / 2);
@@ -251,7 +266,7 @@ class GameState {
       for (let j = -(gh / 2) / sp; j < gh / sp / 2; j++) {
         let x = i * sp;
         let y = j * sp;
-        let time = this.mystery_timers.grid_shrink.getTime();
+        let time = this.mystery_timers.grid_restrict.getTime();
         if (x >= x_max || x < x_min || y >= y_max || y < y_min) {
           if (time > 120) {
             if (sin(pow(time - 100, 2)) > 0) {
@@ -282,6 +297,10 @@ class GameState {
   }
   translateGame() {
     translate(this.sketch_width / 2, this.sketch_height / 2 + 20);
+    if (this.mystery_flags.grid_fluctuate) {
+      console.log("hello");
+      scale(abs(cos(this.mystery_timers.grid_fluctuate.getTime() * 3)));
+    }
     if (this.mystery_flags["rotate_right"]) {
       this.mystery_timers.rotation.timer();
       rotate(this.mystery_timers.rotation.getTime());
@@ -291,24 +310,54 @@ class GameState {
       rotate(-this.mystery_timers.rotation.getTime());
     }
   }
-  showGame() {
+  //EXPERIMENTAL
+  drawRand() {
     let s = this.snake;
     let f = this.food;
     let m = this.mystery_box;
     let scheme = this.current_color_scheme;
+    let spacing = this.spacing;
+    var new_spacing;
+    var offset = s.position.x + 1;
     push();
     this.translateGame();
     this.drawGrid();
-    f.show(scheme.getFC(), scheme.getFSC(), scheme.getSW(), this.spacing);
+    new_spacing = noise(offset, offset) * spacing;
+    f.show(scheme.getFC(), scheme.getFSC(), scheme.getSW(), new_spacing);
+    new_spacing = noise(offset, offset) * spacing;
+    s.changeDimensions(new_spacing, new_spacing);
     s.show(
       scheme.getSC(),
       scheme.getSIC(),
       scheme.getSTC(),
       scheme.getSSC(),
       scheme.getSW(),
-      this.spacing
+      spacing
     );
-    m.show(scheme.getMBC(), scheme.getMBSC(), scheme.getSW(), this.spacing);
+    new_spacing = noise(offset, offset) * spacing;
+    m.show(scheme.getMBC(), scheme.getMBSC(), scheme.getSW(), new_spacing);
+    new_spacing = noise(offset, offset) * spacing;
+    pop();
+  }
+  showGame() {
+    let s = this.snake;
+    let f = this.food;
+    let m = this.mystery_box;
+    let scheme = this.current_color_scheme;
+    let spacing = this.spacing;
+    push();
+    this.translateGame();
+    this.drawGrid();
+    f.show(scheme.getFC(), scheme.getFSC(), scheme.getSW(), spacing);
+    s.show(
+      scheme.getSC(),
+      scheme.getSIC(),
+      scheme.getSTC(),
+      scheme.getSSC(),
+      scheme.getSW(),
+      spacing
+    );
+    m.show(scheme.getMBC(), scheme.getMBSC(), scheme.getSW(), spacing);
     pop();
   }
   showBackground() {
@@ -350,6 +399,7 @@ class GameState {
         this.showAll();
       }
     }
+    this.updateActiveTimers();
   }
 }
 

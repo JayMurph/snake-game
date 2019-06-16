@@ -41,6 +41,10 @@ function deathGridAnimation(GS) {
   let stroke_color = scheme.getSSC();
   let stroke_weight = scheme.getSW();
   let tongue_color = scheme.getSTC();
+  var snake_head_size;
+  var snake_body_surrogate = new Array;
+  var food_size;
+  var mystery_box_size;
   if (typeof this.running == "undefined") {
     this.max_x = gw / 2 / sp;
     this.max_y = gh / 2 / sp;
@@ -98,53 +102,60 @@ function deathGridAnimation(GS) {
         }
         for (let l = 0; l < snake.body.length; l++) {
           if (snake.body[l].x == curr_x && snake.body[l].y == curr_y) {
-            snake.drawSegment(
-              snake.body[l].x,
-              snake.body[l].y,
-              size,
-              color,
-              stroke_color,
-              stroke_weight
-            );
+            snake_body_surrogate.push({x: curr_x, y: curr_y, size: size});
             break;
           }
         }
         if (curr_x == snake.position.x && curr_y == snake.position.y) {
-          snake.showHeadDead(
-            snake.position.x,
-            snake.position.y,
-            color,
-            tongue_color,
-            stroke_color,
-            stroke_weight,
-            size,
-            sp
-          );
+          snake_head_size = size;
         } else if (curr_x == food.position.x && curr_y == food.position.y) {
-          food.drawNormal(
-            food.position.x,
-            food.position.y,
-            scheme.getFC(),
-            scheme.getFSC(),
-            scheme.getSW(),
-            size
-          );
+          food_size = size;
         } else if (
           curr_x == mystery_box.position.x &&
           curr_y == mystery_box.position.y
         ) {
-          mystery_box.show(
-            scheme.getMBC(),
-            scheme.getMBSC(),
-            scheme.getSW(),
-            size
-          );
+          mystery_box_size = size;
         }
       }
       k--;
       j++;
     }
   }
+  mystery_box.show(
+    scheme.getMBC(),
+    scheme.getMBSC(),
+    stroke_weight,
+    mystery_box_size
+  );
+  square(food.position.x, food.position.y, food_size);
+  food.drawNormal(
+    food.position.x,
+    food.position.y,
+    scheme.getFC(),
+    scheme.getFSC(),
+    stroke_weight,
+    food_size
+  );
+  for (let l = 0; l < snake_body_surrogate.length; l++) {
+    snake.drawSegment(
+      snake_body_surrogate[l].x,
+      snake_body_surrogate[l].y,
+      snake_body_surrogate[l].size,
+      color,
+      stroke_color,
+      stroke_weight
+    );
+  }
+  snake.showHeadDead(
+    snake.position.x,
+    snake.position.y,
+    color,
+    tongue_color,
+    stroke_color,
+    stroke_weight,
+    snake_head_size,
+    sp
+  );
   pop();
   if (this.y_counter <= this.min_y) {
     this.running = undefined;
@@ -168,6 +179,9 @@ function introGridAnimation(GS) {
   let stroke_color = scheme.getSSC();
   let stroke_weight = scheme.getSW();
   let tongue_color = scheme.getSTC();
+  var snake_head_size;
+  var snake_body_surrogate = new Array;
+  var food_size;
   if (typeof this.running == "undefined") {
     this.max_x = gw / 2 / sp;
     this.max_y = gh / 2 / sp;
@@ -197,44 +211,49 @@ function introGridAnimation(GS) {
         }
         for (let l = 0; l < snake.body.length; l++) {
           if (curr_x == snake.body[l].x && curr_y == snake.body[l].y) {
-            snake.drawSegment(
-              snake.body[l].x,
-              snake.body[l].y,
-              size,
-              color,
-              stroke_color,
-              stroke_weight
-            );
+            snake_body_surrogate.push({x: curr_x, y: curr_y, size: size});
             break;
           }
         }
         if (curr_x == snake.position.x && curr_y == snake.position.y) {
-          snake.showHead(
-            snake.position.x,
-            snake.position.y,
-            color,
-            tongue_color,
-            stroke_color,
-            stroke_weight,
-            size,
-            sp
-          );
+          snake_head_size = size;
         } else if (curr_x == food.position.x && curr_y == food.position.y) {
-          square(food.position.x, food.position.y, size);
-          food.drawNormal(
-            food.position.x,
-            food.position.y,
-            scheme.getFC(),
-            scheme.getFSC(),
-            scheme.getSW(),
-            size
-          );
+          food_size = size;
         }
       }
       k--;
       j++;
     }
   }
+  square(food.position.x, food.position.y, food_size);
+  food.drawNormal(
+    food.position.x,
+    food.position.y,
+    scheme.getFC(),
+    scheme.getFSC(),
+    scheme.getSW(),
+    food_size
+  );
+  for (let l = 0; l < snake_body_surrogate.length; l++) {
+    snake.drawSegment(
+      snake_body_surrogate[l].x,
+      snake_body_surrogate[l].y,
+      snake_body_surrogate[l].size,
+      color,
+      stroke_color,
+      stroke_weight
+    );
+  }
+  snake.showHead(
+    snake.position.x,
+    snake.position.y,
+    color,
+    tongue_color,
+    stroke_color,
+    stroke_weight,
+    snake_head_size,
+    sp
+  );
   pop();
   if (this.y_counter >= Math.sqrt(mod_gw * mod_gw + mod_gh * mod_gh) * 3) {
     this.running = undefined;

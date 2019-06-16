@@ -55,16 +55,20 @@ class MysteryBox {
         stroke_weight,
         spacing
       );
-      push();
-      textSize(spacing);
-      fill(0);
-      textAlign(CENTER, CENTER);
-      text(
-        "?",
-        this.position.x + spacing / 2,
-        this.position.y + spacing / 2 + 1
-      );
-      pop();
+      if(spacing >= 1){
+        push();
+        textSize(spacing);
+        stroke(0);
+        strokeWeight(0);
+        fill(0);
+        textAlign(CENTER, CENTER);
+        text(
+          "?",
+          this.position.x + spacing / 2,
+          this.position.y + spacing / 2 + 1
+        );
+        pop();
+      }
     }
   }
   snakeCollision(snake_position) {
