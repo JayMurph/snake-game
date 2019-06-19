@@ -162,19 +162,14 @@ class GameState {
     let rand = Math.floor(Math.random() * (max - min)) + min;
     switch (rand) {
       case 1:
-        console.log("rotate_right");
         return "rotate_right";
       case 2:
-        console.log("rotate_left");
         return "rotate_left";
       case 3:
-        console.log("invisible_snake");
         return "invisible_snake";
       case 4:
-        console.log("grid_restrict");
         return "grid_restrict";
       case 5:
-        console.log("grid_fluctuate");
         return "grid_fluctuate";
     }
   }
@@ -298,8 +293,9 @@ class GameState {
   translateGame() {
     translate(this.sketch_width / 2, this.sketch_height / 2 + 20);
     if (this.mystery_flags.grid_fluctuate) {
-      console.log("hello");
-      scale(abs(cos(this.mystery_timers.grid_fluctuate.getTime() * 3)));
+      let value = map(cos(this.mystery_timers.grid_fluctuate.getTime() * 6),
+      -1, 1, .12, 1);
+      scale(value);
     }
     if (this.mystery_flags["rotate_right"]) {
       this.mystery_timers.rotation.timer();
@@ -309,35 +305,6 @@ class GameState {
       this.mystery_timers.rotation.timer();
       rotate(-this.mystery_timers.rotation.getTime());
     }
-  }
-  //EXPERIMENTAL
-  drawRand() {
-    let s = this.snake;
-    let f = this.food;
-    let m = this.mystery_box;
-    let scheme = this.current_color_scheme;
-    let spacing = this.spacing;
-    var new_spacing;
-    var offset = s.position.x + 1;
-    push();
-    this.translateGame();
-    this.drawGrid();
-    new_spacing = noise(offset, offset) * spacing;
-    f.show(scheme.getFC(), scheme.getFSC(), scheme.getSW(), new_spacing);
-    new_spacing = noise(offset, offset) * spacing;
-    s.changeDimensions(new_spacing, new_spacing);
-    s.show(
-      scheme.getSC(),
-      scheme.getSIC(),
-      scheme.getSTC(),
-      scheme.getSSC(),
-      scheme.getSW(),
-      spacing
-    );
-    new_spacing = noise(offset, offset) * spacing;
-    m.show(scheme.getMBC(), scheme.getMBSC(), scheme.getSW(), new_spacing);
-    new_spacing = noise(offset, offset) * spacing;
-    pop();
   }
   showGame() {
     let s = this.snake;
