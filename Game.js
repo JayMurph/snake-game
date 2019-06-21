@@ -136,17 +136,14 @@ class GameState {
         this.grid_height - y_reduction,
         this.spacing
       );
-      //console.log(new_pos);
       if (new_pos.x == this.snake.position.x &&
         new_pos.y == this.snake.position.y) {
-        console.log("snake head fail");
         occupied = true;
       }
       if (!(typeof this.mystery_box == "undefined")) {
         if (this.mystery_box.isActive()) {
           if (new_pos.x == this.mystery_box.position.x &&
             new_pos.y == this.mystery_box.position.y) {
-            console.log("mystery box fail");
             occupied = true;
           }
         }
@@ -155,18 +152,15 @@ class GameState {
         if (this.food.isAlive()) {
           if (new_pos.x == this.food.position.x &&
             new_pos.y == this.food.position.y) {
-            console.log("food fail");
             occupied = true;
           }
         }
       }
       for (let i = 0; i < this.snake.body.length; i++) {
-        //console.log(i, " ", this.snake.body[i]);
         if (
           new_pos.x == this.snake.body[i].x &&
           new_pos.y == this.snake.body[i].y
         ) {
-          console.log("snake body fail");
           occupied = true;
         }
       }
