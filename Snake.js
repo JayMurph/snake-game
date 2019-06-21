@@ -16,7 +16,7 @@ class Snake {
     this.current_growth = 0;
     this.visible_body = true;
     this.invisibility_timer = 0;
-    this.color = color(100, 100, 20 );
+    this.color = color(100, 100, 20);
   }
   isAlive() {
     return this.alive;
@@ -24,7 +24,7 @@ class Snake {
   makeAlive() {
     this.alive = true;
   }
-  changeDimensions(width, height){
+  changeDimensions(width, height) {
     this.dimensions.width = width;
     this.dimensions.height = height;
   }
@@ -56,12 +56,12 @@ class Snake {
       let y_coord = this.body[i].y;
       let timer = this.invisibility_timer;
       var temp_color;
-      if(timer < 120){
+      if (timer < 120) {
         temp_color = invisible_color;
-      }else{
-        if(sin(pow(timer - 100, 2)) > 0){
+      } else {
+        if (sin(pow(timer - 100, 2)) > 0) {
           temp_color = color;
-        }else{
+        } else {
           temp_color = invisible_color;
         }
       }
@@ -221,12 +221,24 @@ class Snake {
       spacing
     );
   }
-  show(color, invisible_color, tongue_color, stroke_color, stroke_weight, spacing) {
+  show(
+    color,
+    invisible_color,
+    tongue_color,
+    stroke_color,
+    stroke_weight,
+    spacing
+  ) {
     if (this.isAlive()) {
-      if(this.visible_body){
+      if (this.visible_body) {
         this.showBody(color, stroke_color, stroke_weight);
-      }else{
-        this.showInvisibleBody(color, invisible_color, stroke_color, stroke_weight);
+      } else {
+        this.showInvisibleBody(
+          color,
+          invisible_color,
+          stroke_color,
+          stroke_weight
+        );
       }
       this.showHead(
         this.position.x,
@@ -350,7 +362,14 @@ class Snake {
       }
     }
   }
-  update(b_width, b_height, spacing, food_position, visible_body, invisibility_timer) {
+  update(
+    b_width,
+    b_height,
+    spacing,
+    food_position,
+    visible_body,
+    invisibility_timer
+  ) {
     if (this.isAlive()) {
       this.visible_body = visible_body;
       this.invisibility_timer = invisibility_timer;

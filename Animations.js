@@ -27,6 +27,56 @@ function checkCollisions() {
   return false;
 }
 
+function drawAssets(
+  GS,
+  snake_head_size,
+  snake_body_surrogate,
+  food_size,
+  mystery_box_size
+) {
+  let snake = GS.snake;
+  let food = GS.food;
+  let mystery_box = GS.mystery_box; 
+  let scheme = GS.current_color_scheme;
+  push();
+  mystery_box.show(
+    scheme.getMBC(),
+    scheme.getMBSC(),
+    scheme.getSW(),
+    mystery_box_size
+  );
+  square(food.position.x, food.position.y, food_size);
+  food.drawNormal(
+    food.position.x,
+    food.position.y,
+    scheme.getFC(),
+    scheme.getFSC(),
+    scheme.getSW(),
+    food_size
+  );
+  for (let l = 0; l < snake_body_surrogate.length; l++) {
+    snake.drawSegment(
+      snake_body_surrogate[l].x,
+      snake_body_surrogate[l].y,
+      snake_body_surrogate[l].size,
+      scheme.getSC(),
+      scheme.getSSC(),
+      scheme.getSW()
+    );
+  }
+  snake.showHead(
+    snake.position.x,
+    snake.position.y,
+    scheme.getSC(),
+    scheme.getSTC(),
+    scheme.getSSC(),
+    scheme.getSW(),
+    snake_head_size,
+    GS.spacing
+  );
+  pop();
+}
+
 function deathGridAnimation(GS) {
   let gw = GS.game_width;
   let gh = GS.game_height;
@@ -37,12 +87,8 @@ function deathGridAnimation(GS) {
   let snake = GS.snake;
   let food = GS.food;
   let mystery_box = GS.mystery_box;
-  let color = scheme.getSC();
-  let stroke_color = scheme.getSSC();
-  let stroke_weight = scheme.getSW();
-  let tongue_color = scheme.getSTC();
   var snake_head_size;
-  var snake_body_surrogate = new Array;
+  var snake_body_surrogate = new Array();
   var food_size;
   var mystery_box_size;
   if (typeof this.running == "undefined") {
@@ -70,8 +116,8 @@ function deathGridAnimation(GS) {
           food.position,
           mystery_box.position,
           snake.body
-          );
-        } else {
+        );
+      } else {
         collision = checkCollisions(
           current_pos,
           snake.position,
@@ -102,7 +148,7 @@ function deathGridAnimation(GS) {
         }
         for (let l = 0; l < snake.body.length; l++) {
           if (snake.body[l].x == curr_x && snake.body[l].y == curr_y) {
-            snake_body_surrogate.push({x: curr_x, y: curr_y, size: size});
+            snake_body_surrogate.push({ x: curr_x, y: curr_y, size: size });
             break;
           }
         }
@@ -121,41 +167,7 @@ function deathGridAnimation(GS) {
       j++;
     }
   }
-  mystery_box.show(
-    scheme.getMBC(),
-    scheme.getMBSC(),
-    stroke_weight,
-    mystery_box_size
-  );
-  square(food.position.x, food.position.y, food_size);
-  food.drawNormal(
-    food.position.x,
-    food.position.y,
-    scheme.getFC(),
-    scheme.getFSC(),
-    stroke_weight,
-    food_size
-  );
-  for (let l = 0; l < snake_body_surrogate.length; l++) {
-    snake.drawSegment(
-      snake_body_surrogate[l].x,
-      snake_body_surrogate[l].y,
-      snake_body_surrogate[l].size,
-      color,
-      stroke_color,
-      stroke_weight
-    );
-  }
-  snake.showHeadDead(
-    snake.position.x,
-    snake.position.y,
-    color,
-    tongue_color,
-    stroke_color,
-    stroke_weight,
-    snake_head_size,
-    sp
-  );
+  drawAssets(GS, snake_head_size, snake_body_surrogate, food_size, mystery_box_size);
   pop();
   if (this.y_counter <= this.min_y) {
     this.running = undefined;
@@ -175,12 +187,8 @@ function introGridAnimation(GS) {
   let food = GS.food;
   let mod_gw = gw / 2 / sp;
   let mod_gh = gh / 2 / sp;
-  let color = scheme.getSC();
-  let stroke_color = scheme.getSSC();
-  let stroke_weight = scheme.getSW();
-  let tongue_color = scheme.getSTC();
   var snake_head_size;
-  var snake_body_surrogate = new Array;
+  var snake_body_surrogate = new Array();
   var food_size;
   if (typeof this.running == "undefined") {
     this.max_x = gw / 2 / sp;
@@ -199,11 +207,16 @@ function introGridAnimation(GS) {
       let curr_x = j * sp;
       let curr_y = k * sp;
       let current_pos = { x: curr_x, y: curr_y };
-      let collision = checkCollisions( current_pos, snake.position, food.position, snake.body);
+      let collision = checkCollisions(
+        current_pos,
+        snake.position,
+        food.position,
+        snake.body
+      );
       if (curr_x < gw / 2 && curr_y < gh / 2) {
         var size;
         size = growingSquare(this.y_counter - i, this.min_y, this.max_y, 0, sp);
-        if(!collision){
+        if (!collision) {
           noFill();
           stroke(scheme.getGC());
           strokeWeight(3);
@@ -211,7 +224,7 @@ function introGridAnimation(GS) {
         }
         for (let l = 0; l < snake.body.length; l++) {
           if (curr_x == snake.body[l].x && curr_y == snake.body[l].y) {
-            snake_body_surrogate.push({x: curr_x, y: curr_y, size: size});
+            snake_body_surrogate.push({ x: curr_x, y: curr_y, size: size });
             break;
           }
         }
@@ -225,35 +238,7 @@ function introGridAnimation(GS) {
       j++;
     }
   }
-  square(food.position.x, food.position.y, food_size);
-  food.drawNormal(
-    food.position.x,
-    food.position.y,
-    scheme.getFC(),
-    scheme.getFSC(),
-    scheme.getSW(),
-    food_size
-  );
-  for (let l = 0; l < snake_body_surrogate.length; l++) {
-    snake.drawSegment(
-      snake_body_surrogate[l].x,
-      snake_body_surrogate[l].y,
-      snake_body_surrogate[l].size,
-      color,
-      stroke_color,
-      stroke_weight
-    );
-  }
-  snake.showHead(
-    snake.position.x,
-    snake.position.y,
-    color,
-    tongue_color,
-    stroke_color,
-    stroke_weight,
-    snake_head_size,
-    sp
-  );
+  drawAssets(GS, snake_head_size, snake_body_surrogate, food_size, 0);
   pop();
   if (this.y_counter >= Math.sqrt(mod_gw * mod_gw + mod_gh * mod_gh) * 3) {
     this.running = undefined;
@@ -263,6 +248,7 @@ function introGridAnimation(GS) {
     return true;
   }
 }
+
 
 function introSnakeAnimation(GS) {
   let sp = GS.spacing;
