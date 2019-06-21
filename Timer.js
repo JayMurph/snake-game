@@ -29,7 +29,6 @@ function newRotationTimer() {
 
 function newGridRestrictTimer() {
   return new Timer(function() {
-    console.log("this.time = ", this.time);
     if(this.getTime() == 0){
       let temp = floor(random(1, 6)) * 2;
       game_state.grid_width = game_state.game_width - (temp * game_state.spacing);

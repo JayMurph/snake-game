@@ -1,6 +1,6 @@
 class Snake {
   constructor(position, dimensions, velocity, init_body_length, growth_rate) {
-    this.alive = false;
+    this.alive = true; 
     this.position = position;
     this.dimensions = dimensions;
     this.velocity = velocity;
@@ -143,35 +143,6 @@ class Snake {
       spacing
     );
   }
-  showHead(
-    x_coord,
-    y_coord,
-    color,
-    tongue_color,
-    stroke_color,
-    stroke_weight,
-    size,
-    spacing
-  ) {
-    this.drawHeadSegment(
-      x_coord,
-      y_coord,
-      size,
-      color,
-      stroke_color,
-      stroke_weight,
-      size
-    );
-    this.drawTongue(
-      x_coord,
-      y_coord,
-      tongue_color,
-      stroke_weight,
-      size,
-      spacing
-    );
-    this.drawEyes(x_coord, y_coord, stroke_color, stroke_weight, size, spacing);
-  }
   showHeadDead(
     x_coord,
     y_coord,
@@ -207,6 +178,69 @@ class Snake {
       size,
       spacing
     );
+  }
+  showHeadAlive(
+    x_coord,
+    y_coord,
+    color,
+    tongue_color,
+    stroke_color,
+    stroke_weight,
+    size,
+    spacing
+  ) {
+    this.drawHeadSegment(
+      x_coord,
+      y_coord,
+      size,
+      color,
+      stroke_color,
+      stroke_weight,
+      size
+    );
+    this.drawTongue(
+      x_coord,
+      y_coord,
+      tongue_color,
+      stroke_weight,
+      size,
+      spacing
+    );
+    this.drawEyes(x_coord, y_coord, stroke_color, stroke_weight, size, spacing);
+  }
+  showHead(
+    x_coord,
+    y_coord,
+    color,
+    tongue_color,
+    stroke_color,
+    stroke_weight,
+    size,
+    spacing
+  ) {
+    if (this.isAlive()) {
+      this.showHeadAlive(
+        x_coord,
+        y_coord,
+        color,
+        tongue_color,
+        stroke_color,
+        stroke_weight,
+        size,
+        spacing
+      )
+    } else {
+      this.showHeadDead(
+        x_coord,
+        y_coord,
+        color,
+        tongue_color,
+        stroke_color,
+        stroke_weight,
+        size,
+        spacing
+      )
+    }
   }
   introShow(color, tongue_color, stroke_color, stroke_weight, spacing) {
     this.showBody(color, stroke_color, stroke_weight);
@@ -336,7 +370,7 @@ class Snake {
   updateBodyPosition(new_x, new_y) {
     if (this.isAlive()) {
       if (this.grow_flag) {
-        if (this.current_growth >= this.growth_rate) {
+        if (this.current_growth >= this.growth_rate - 1) {
           this.grow_flag = 0;
           this.current_growth = 0;
         } else {

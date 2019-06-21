@@ -49,6 +49,7 @@ class GameState {
     this.state_flags["death_grid"] = false;
     this.state_flags["new_game"] = false;
     this.state_flags["game"] = false;
+    this.state_flags["pause"] = false;
   }
   resetMysteryFlags() {
     this.mystery_flags["rotate_right"] = false;
@@ -82,15 +83,28 @@ class GameState {
       }
     }
   }
+  togglePause() {
+    if (this.state_flags["pause"]) {
+      this.state_flags["pause"] = false;
+    } else {
+      this.state_flags["pause"] = true;
+    }
+  }
   resetGrid() {
     this.grid_width = this.game_width;
     this.grid_height = this.game_height;
   }
   newSnake() {
-    return new Snake(
-      { x: _INIT_SNAKE_POSITION_X, y: _INIT_SNAKE_POSITION_Y },
-      { width: _INIT_WIDTH, height: _INIT_HEIGHT },
-      { x: _INIT_SNAKE_VELOCITY_X, y: _INIT_SNAKE_VELOCITY_Y },
+    return new Snake({
+        x: _INIT_SNAKE_POSITION_X,
+        y: _INIT_SNAKE_POSITION_Y
+      }, {
+        width: _INIT_WIDTH,
+        height: _INIT_HEIGHT
+      }, {
+        x: _INIT_SNAKE_VELOCITY_X,
+        y: _INIT_SNAKE_VELOCITY_Y
+      },
       _INIT_BODY_LENGTH,
       _GROWTH_RATE
     );
@@ -98,16 +112,13 @@ class GameState {
   initIntroSnake() {
     let pos_x = -5 * this.spacing;
     let pos_y = floor(this.game_height) + 2 * this.spacing;
-    return new Snake(
-      {
+    return new Snake({
         x: pos_x,
         y: pos_y
-      },
-      {
+      }, {
         width: _INIT_WIDTH,
         height: _INIT_HEIGHT
-      },
-      {
+      }, {
         x: 0,
         y: 0
       },
@@ -125,36 +136,49 @@ class GameState {
         this.grid_height - y_reduction,
         this.spacing
       );
-      if (new_pos == this.snake.position) {
+      //console.log(new_pos);
+      if (new_pos.x == this.snake.position.x &&
+        new_pos.y == this.snake.position.y) {
+        console.log("snake head fail");
         occupied = true;
       }
       if (!(typeof this.mystery_box == "undefined")) {
         if (this.mystery_box.isActive()) {
-          if (new_pos == this.mystery_box.position) {
+          if (new_pos.x == this.mystery_box.position.x &&
+            new_pos.y == this.mystery_box.position.y) {
+            console.log("mystery box fail");
             occupied = true;
           }
         }
       }
       if (!(typeof this.food == "undefined")) {
         if (this.food.isAlive()) {
-          if (new_pos == this.food.pos) {
+          if (new_pos.x == this.food.position.x &&
+            new_pos.y == this.food.position.y) {
+            console.log("food fail");
             occupied = true;
           }
         }
       }
       for (let i = 0; i < this.snake.body.length; i++) {
+        //console.log(i, " ", this.snake.body[i]);
         if (
           new_pos.x == this.snake.body[i].x &&
           new_pos.y == this.snake.body[i].y
-        )
+        ) {
+          console.log("snake body fail");
           occupied = true;
+        }
       }
     } while (occupied);
     return new_pos;
   }
   newFood() {
     var new_pos = this.generateUnnocupiedPosition(0, 0);
-    return new Food(new_pos, { width: _INIT_WIDTH, height: _INIT_HEIGHT });
+    return new Food(new_pos, {
+      width: _INIT_WIDTH,
+      height: _INIT_HEIGHT
+    });
   }
   generateRandomMystery() {
     let min = 1;
@@ -182,8 +206,7 @@ class GameState {
       new_pos = this.generateUnnocupiedPosition(0, 0);
     }
     return new MysteryBox(
-      new_pos,
-      {
+      new_pos, {
         width: _INIT_WIDTH,
         height: _INIT_HEIGHT
       },
@@ -294,7 +317,7 @@ class GameState {
     translate(this.sketch_width / 2, this.sketch_height / 2 + 20);
     if (this.mystery_flags.grid_fluctuate) {
       let value = map(cos(this.mystery_timers.grid_fluctuate.getTime() * 6),
-      -1, 1, .12, 1);
+        -1, 1, .12, 1);
       scale(value);
     }
     if (this.mystery_flags["rotate_right"]) {
@@ -360,6 +383,8 @@ class GameState {
       }
     } else if (this.state_flags["new_game"]) {
       this.newGame();
+    } else if (this.state_flags["pause"]) {
+
     } else if (this.state_flags["game"]) {
       this.updateGame();
       if (!(typeof this.snake == "undefined")) {
@@ -388,7 +413,10 @@ const _SKETCH_WIDTH = 800;
 const _SKETCH_HEIGHT = 750;
 const _GAME_WIDTH = 600;
 const _GAME_HEIGHT = 600;
-const _GAME_POSITION = { x: 100, y: 100 };
+const _GAME_POSITION = {
+  x: 100,
+  y: 100
+};
 const _SPACING = 20;
 const _SPEED = 5;
 const _SPEED_INCREASE = 0.5;

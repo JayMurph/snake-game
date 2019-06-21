@@ -50,5 +50,7 @@ function keyPressed() {
       x: sp,
       y: 0
     });
+  } else if (keyCode === ENTER){
+    game_state.togglePause();
   }
 }
