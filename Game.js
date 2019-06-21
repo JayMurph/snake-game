@@ -44,8 +44,8 @@ class GameState {
     this.current_score = 0;
   }
   resetStateFlags() {
-    this.state_flags["intro"] = false;
-    this.state_flags["intro_grid"] = true;
+    this.state_flags["intro"] = true;
+    this.state_flags["intro_grid"] = false;
     this.state_flags["death_grid"] = false;
     this.state_flags["new_game"] = false;
     this.state_flags["game"] = false;
