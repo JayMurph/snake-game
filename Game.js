@@ -44,8 +44,8 @@ class GameState {
     this.current_score = 0;
   }
   resetStateFlags() {
-    this.state_flags["intro"] = true;
-    this.state_flags["intro_grid"] = false;
+    this.state_flags["intro"] = false;
+    this.state_flags["intro_grid"] = true;
     this.state_flags["death_grid"] = false;
     this.state_flags["new_game"] = false;
     this.state_flags["game"] = false;
@@ -173,19 +173,21 @@ class GameState {
     });
   }
   generateRandomMystery() {
-    let min = 1;
-    let max = 6;
-    let rand = Math.floor(Math.random() * (max - min)) + min;
+    let min = 0;
+    let max = 4;
+    let rand = floor(random(min, max));
     switch (rand) {
+      case 0:
+        if(floor(random(2))){
+          return "rotate_left";
+        } else {
+          return "rotate_right";
+        }
       case 1:
-        return "rotate_right";
-      case 2:
-        return "rotate_left";
-      case 3:
         return "invisible_snake";
-      case 4:
+      case 2:
         return "grid_restrict";
-      case 5:
+      case 3:
         return "grid_fluctuate";
     }
   }
@@ -271,7 +273,7 @@ class GameState {
     }
     push();
     noFill();
-    strokeWeight(3);
+    strokeWeight(scheme.getGSW());
     for (let i = -(gw / 2) / sp; i < gw / sp / 2; i++) {
       for (let j = -(gh / 2) / sp; j < gh / sp / 2; j++) {
         let x = i * sp;
