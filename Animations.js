@@ -295,6 +295,7 @@ function introSnakeAnimation(GS) {
   translate(GS.game_position.x, GS.game_position.y);
   intro_snake.show(
     scheme.getSC(),
+    scheme.getSIC(),
     scheme.getSTC(),
     scheme.getSSC(),
     scheme.getSW(),
