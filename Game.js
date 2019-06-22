@@ -136,31 +136,29 @@ class GameState {
         this.grid_height - y_reduction,
         this.spacing
       );
-      if (new_pos.x == this.snake.position.x &&
-        new_pos.y == this.snake.position.y) {
+      if (samePosition(new_pos, this.snake.position))
+      {
         occupied = true;
       }
       if (!(typeof this.mystery_box == "undefined")) {
         if (this.mystery_box.isActive()) {
-          if (new_pos.x == this.mystery_box.position.x &&
-            new_pos.y == this.mystery_box.position.y) {
+          if (samePosition(new_pos, this.mystery_box.position))
+          {
             occupied = true;
           }
         }
       }
       if (!(typeof this.food == "undefined")) {
         if (this.food.isAlive()) {
-          if (new_pos.x == this.food.position.x &&
-            new_pos.y == this.food.position.y) {
+          if (samePosition(new_pos, this.food.position))
+          {
             occupied = true;
           }
         }
       }
       for (let i = 0; i < this.snake.body.length; i++) {
-        if (
-          new_pos.x == this.snake.body[i].x &&
-          new_pos.y == this.snake.body[i].y
-        ) {
+        if (samePosition(new_pos, this.snake.body[i]))
+        {
           occupied = true;
         }
       }
@@ -401,6 +399,10 @@ function generateRandomPosition(x_max, y_max, spacing) {
     y: y * spacing
   };
   return pos;
+}
+ 
+function samePosition(posA, posB){
+  return ((posA.x == posB.x) && (posA.y == posB.y));
 }
 
 const _SKETCH_WIDTH = 800;
