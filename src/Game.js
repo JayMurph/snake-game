@@ -44,7 +44,6 @@ class GameState {
     this.current_score = 0;
   }
   resetStateFlags() {
-    this.state_flags["intro"] = false;
     this.state_flags["intro_grid"] = true;
     this.state_flags["death_grid"] = false;
     this.state_flags["new_game"] = false;
@@ -353,17 +352,7 @@ class GameState {
     this.showGame();
   }
   game() {
-    if (this.state_flags["intro"]) {
-      if (typeof this.intro_snake == "undefined") {
-        this.intro_snake = this.initIntroSnake();
-        this.intro_snake.makeAlive();
-      }
-      this.state_flags["intro"] = introAnimation(this);
-      if (this.state_flags["intro"] == false) {
-        this.intro_snake = undefined;
-        this.state_flags["intro_grid"] = true;
-      }
-    } else if (this.state_flags["intro_grid"]) {
+    if (this.state_flags["intro_grid"]) {
       this.state_flags["intro_grid"] = introGridAnimation(this);
       if (!this.state_flags["intro_grid"]) {
         this.state_flags["game"] = true;
